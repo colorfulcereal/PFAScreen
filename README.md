@@ -15,19 +15,66 @@ Please find our recent detailed Youtube tutorial at the following link: https://
 Installation:
 --------------------
 
-PFΔScreen can be installed and executed within the standard Python environment. To make installation and use as easily as possible, PFΔScreen can be automatically installed with the Installation.bat file and executed with the Run_PFAScreen.bat file without the need of additional software. In the following, the two steps needed for a simple installation are explained.
+PFΔScreen can be installed and executed within the standard Python environment. To make installation and use as easily as possible, PFΔScreen can be automatically installed with platform-specific scripts and executed without the need of additional software. In the following, the steps needed for installation are explained for both Windows and macOS.
 
-### Automated installation
+### Windows Installation
 
-- Download PFΔSScreen by clicking on the green “Code” button and click “Download ZIP”. When downloaded, unzip the folder and move it to a local folder on your computer. 
--	Automatic installation of Python and the required packages with Installation.bat: Navigate into the folder where PFΔSScreen was copied (PFAScreen-main). Double click the Installation.bat file. The Windows command line interface will open, and the Microsoft Store opens automatically if you do not have Python installed on your computer. Please note that Python 3.9 is required (search in the Store for "Python 3.9")! Then, click on “Install” and wait until the installation of Python is finished and close the Microsoft Store. Back to the Windows command line press any button to automatically install pip (Package Manager for Python) and in the following all required Python packages. Finally, when the message “Installation successfully finished” pops up, press any button and the installation is completed.
+#### Automated installation
 
+- Download PFΔSScreen by clicking on the green "Code" button and click "Download ZIP". When downloaded, unzip the folder and move it to a local folder on your computer.
+-	Automatic installation of Python and the required packages with Installation.bat: Navigate into the folder where PFΔSScreen was copied (PFAScreen-main). Double click the Installation.bat file. The Windows command line interface will open, and the Microsoft Store opens automatically if you do not have Python installed on your computer. Please note that Python 3.9 is required (search in the Store for "Python 3.9")! Then, click on "Install" and wait until the installation of Python is finished and close the Microsoft Store. Back to the Windows command line press any button to automatically install pip (Package Manager for Python) and in the following all required Python packages. Finally, when the message "Installation successfully finished" pops up, press any button and the installation is completed.
 
-### Package installation 
-If Python 3.9 is already installed, the PFΔScreen dependencies can be installed within the standard Python environment with the following command:
+### macOS Installation
 
+#### Prerequisites
+- macOS 10.9 or later
+- Python 3.9 or higher (check by running `python3 --version` in Terminal)
+- If Python 3.9+ is not installed, download it from [https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+#### Automated installation
+
+1. Download PFΔScreen by clicking on the green "Code" button and click "Download ZIP"
+2. Unzip the folder and move it to a local folder on your computer
+3. Open Terminal (Applications > Utilities > Terminal)
+4. Navigate to the PFAScreen folder:
+   ```bash
+   cd /path/to/PFAScreen
+   ```
+5. Run the installation script:
+   ```bash
+   ./installation.sh
+   ```
+   If you get a "Permission denied" error, first make the script executable:
+   ```bash
+   chmod +x installation.sh
+   ./installation.sh
+   ```
+
+#### Running PFAScreen on macOS
+
+To run PFAScreen on macOS, you have two options:
+
+1. Using the shell script (recommended):
+   ```bash
+   ./run_pfascreen.sh
+   ```
+
+2. Using Python directly:
+   ```bash
+   python3 run_PFAScreen.py
+   ```
+
+### Manual Package Installation
+If Python 3.9+ is already installed, the PFΔScreen dependencies can be installed within the standard Python environment with the following command:
+
+**Windows:**
 ```
 pip install -r requirements.txt
+```
+
+**macOS/Linux:**
+```
+python3 -m pip install -r requirements.txt
 ```
 
 General explanation
