@@ -39,7 +39,7 @@ def combine_dias_diffs(mz_array,
             frag_diff_pairs = np.concatenate((frag_diff_pairs, frag_diff_pairs_i), axis = 1)
 
         # fragment difference pairs that also have diagnostic evidence
-        frag_diff_pairs_dias = frag_diff_pairs[:, np.in1d(frag_diff_pairs[1,:], diff_dia_evid[1,:])]
+        frag_diff_pairs_dias = frag_diff_pairs[:, np.isin(frag_diff_pairs[1,:], diff_dia_evid[1,:])]
 
         # collect neighbours, multipicator of mass difference and whether the neighbour is below or above
         # first entries are diff_and_dia_evidence and then neighours are added sequencially
@@ -50,15 +50,15 @@ def combine_dias_diffs(mz_array,
 
         # MAYBE TAKE np.unique() to increase performance
         checked_frags = frag_diff_pairs_dias[1:,:].flatten().astype('int')               # array with already checked fragments (for while loop)
-        frag_diffs_comparis = frag_diff_pairs[:,np.in1d(frag_diff_pairs[1,:], frag_idx)] # find neigbours of frags which are diff*1 away from dias
+        frag_diffs_comparis = frag_diff_pairs[:,np.isin(frag_diff_pairs[1,:], frag_idx)] # find neigbours of frags which are diff*1 away from dias
 
         factor = 2  # start with two since differences from before have already a distance of diff*1
-        while np.all( np.in1d(frag_diffs_comparis[2,:], checked_frags) ) == False:
+        while np.all( np.isin(frag_diffs_comparis[2,:], checked_frags) ) == False:
 
             # find new neighbours of found diffs
-            neighbour_idx = frag_diffs_comparis[2, np.in1d(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
-            neighbour_neighbour_idx = frag_diffs_comparis[1, np.in1d(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
-            diff_type_i = frag_diffs_comparis[0, np.in1d(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
+            neighbour_idx = frag_diffs_comparis[2, np.isin(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
+            neighbour_neighbour_idx = frag_diffs_comparis[1, np.isin(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
+            diff_type_i = frag_diffs_comparis[0, np.isin(frag_diffs_comparis[2,:] , checked_frags, invert = True)]
 
             p = np.zeros(len(neighbour_neighbour_idx))
             for s in range(len(neighbour_neighbour_idx)):
@@ -70,12 +70,12 @@ def combine_dias_diffs(mz_array,
             diff_multiplication = np.append(diff_multiplication, factor * np.ones(len(neighbour_idx)))
             diff_type = np.append(diff_type, diff_type_i).astype('int')
             
-            frag_diffs_comparis = frag_diff_pairs[:, np.in1d(frag_diff_pairs[1,:], frag_idx)]
+            frag_diffs_comparis = frag_diff_pairs[:, np.isin(frag_diff_pairs[1,:], frag_idx)]
             checked_frags = np.append(checked_frags, neighbour_idx)
             factor += 1
 
         # only if diffs without dias are present calculate new formulas 
-        if np.all(np.in1d(np.unique(frag_idx), np.unique(frag_diff_pairs_dias[1,:]))) == False:
+        if np.all(np.isin(np.unique(frag_idx), np.unique(frag_diff_pairs_dias[1,:]))) == False:
         
             formula_idx = np.vstack( ( np.where(idx_dia_frags[spec])[0] , np.arange(0, np.sum(idx_dia_frags[spec])) ) ) # indices of dia peaks with corresponding formula indices
             new_formula = [None]*len(frag_idx)

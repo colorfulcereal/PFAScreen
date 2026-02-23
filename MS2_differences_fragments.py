@@ -165,7 +165,7 @@ def MS2_differences_fragments(
             decimals_round = 2 # Extremly important, depends on sample
             _, idx_unique, = np.unique(np.round(dia_frags['fragment_mass'], decimals_round), return_index=True)
 
-            uniques = np.in1d(np.arange(0, len(dia_frags)), idx_unique)
+            uniques = np.isin(np.arange(0, len(dia_frags)), idx_unique)
             dia_frags = dia_frags[uniques]
         # NOTE: Non fluorine containing DFs should be marked so that precursors are only found if at least n F-containing fragments are present
 
@@ -283,7 +283,7 @@ def MS2_differences_fragments(
                         axis = 1)
 
     # NOTE: DAS SOLLTE NOCHMAL AUF KORREKTHEIT ÜBERPRÜFT WERDEN
-    idx_dia_diff_evid = np.where(np.in1d(np.where(idx_diff_or_dia_prec)[0], spec_idx_dia_diff))[0] # index where dia evidence was gained for diffs
+    idx_dia_diff_evid = np.where(np.isin(np.where(idx_diff_or_dia_prec)[0], spec_idx_dia_diff))[0] # index where dia evidence was gained for diffs
 
     D_combine_dia_diffs = pd.DataFrame(data = {'frag_idx':frag_idx_list, 'new_formulas':new_formula_list}).set_index(idx_dia_diff_evid)
     Df_fin = pd.concat([Df_fin, D_combine_dia_diffs], axis=1).set_index(idx_MS1_hit.astype('int'))

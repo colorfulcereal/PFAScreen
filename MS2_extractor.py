@@ -87,8 +87,8 @@ def MS2_extractor(
 
         mz = mz_array[mz_array < prec_mz_true + 5]
         intens = intens_array[mz_array < prec_mz_true + 5]
-        MD = mz - np.round_(mz, decimals = 0)  # NOTE: Change rounding!!
-        MD_prec = prec_mz_true - np.round_(prec_mz_true, decimals = 0)
+        MD = mz - np.round(mz, decimals = 0)  # NOTE: Change rounding!!
+        MD_prec = prec_mz_true - np.round(prec_mz_true, decimals = 0)
         idx = intens > 100
 
         figure()

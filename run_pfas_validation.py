@@ -160,8 +160,8 @@ def main():
                        help='Output folder name')
 
     # PFAScreen parameters (matching PFAS_feature_prioritization defaults)
-    parser.add_argument('--diffs', type=str, default='C2F4,C2F4,HF',
-                       help='Comma-separated fragment differences (default: C2F4,C2F4,HF)')
+    parser.add_argument('--diffs', type=str, default='CF2,C2F4,HF',
+                       help='Comma-separated fragment differences (default: CF2,C2F4,HF)')
     parser.add_argument('--number-of-fragments', type=int, default=1,
                        help='Minimum number of fragment differences (default: 1)')
     parser.add_argument('--mass-tolerance', type=float, default=0.002,
@@ -182,6 +182,8 @@ def main():
                        help='Adducts for suspect screening (default: 1)')
     parser.add_argument('--md-range', type=str, default='-0.5,0.5',
                        help='MD range comma-separated min,max (default: -0.5,0.5)')
+    parser.add_argument('--no-suspect', action='store_true',
+                       help='Skip suspect screening')
 
     args = parser.parse_args()
 
@@ -255,6 +257,7 @@ def main():
             n_homologues=args.n_homologues,
             adducts=args.adducts,
             tol_suspect=args.mass_tolerance,
+            skip_suspect=args.no_suspect,
             save_MSMS_spectra=False,
             mC_range=mc_range,
             MDC_range=mdc_range,
@@ -270,37 +273,65 @@ def main():
         # 1. Passed filters (in Df_FeatureData_Final)
         # 2. Have PFAS indicators: n_diffs > 0 OR n_dias > 0 OR suspect hits OR HS detected
 
-        predictions = []
+        # m/C + MD/C + MD filter is applied as a common first step for all methods.
+        # Features that do not survive the filter are False for every baseline.
+        pred_full    = []
+        pred_kmd     = []
+        pred_diffs   = []
+        pred_dias    = []
+        pred_suspect = []
         for i in range(len(Df_FeatureData)):
             if i in Df_FeatureData_Final.index:
-                # Check PFAS indicators
                 row = Df_FeatureData_Final.loc[i]
                 n_diffs = row.get('n_diffs', 0)
-                n_dias = row.get('n_dias', 0)
-                has_suspect = row.get('compound_names', '') != ''
-                has_hs = row.get('unique_homologues', False)
+                n_dias  = row.get('n_dias', 0)
+                val = row.get('compound_names', np.nan)
+                has_suspect = not (isinstance(val, float) and np.isnan(val)) and bool(val)
+                has_hs = bool(row.get('min_homologues', False))
 
-                # Classify as PFAS if any indicator is positive
-                is_pfas = (n_diffs > 0) or (n_dias > 0) or has_suspect or has_hs
-                predictions.append(is_pfas)
+                pred_full.append(bool((n_diffs > 0) or (n_dias > 0) or has_suspect or has_hs))
+                pred_kmd.append(has_hs)
+                pred_diffs.append(bool(n_diffs > 0))
+                pred_dias.append(bool(n_dias > 0))
+                pred_suspect.append(has_suspect)
             else:
-                # Filtered out = not PFAS
-                predictions.append(False)
+                pred_full.append(False)
+                pred_kmd.append(False)
+                pred_diffs.append(False)
+                pred_dias.append(False)
+                pred_suspect.append(False)
 
-        predictions = np.array(predictions)
+        pred_full    = np.array(pred_full)
+        pred_kmd     = np.array(pred_kmd)
+        pred_diffs   = np.array(pred_diffs)
+        pred_dias    = np.array(pred_dias)
+        pred_suspect = np.array(pred_suspect)
 
-        # Compute metrics
-        metrics = compute_metrics(ground_truth, predictions)
+        # All baselines share m/C + MD/C + MD filter as first step
+        baselines = [
+            ("PFAScreen (full)",                   pred_full),
+            ("KMD analysis + filter",              pred_kmd),
+            ("Fragment differences + filter",      pred_diffs),
+            ("Diagnostic fragments + filter",      pred_dias),
+            ("Suspect screening + filter",         pred_suspect),
+        ]
 
+        # Print summary table
+        col_w = 32
+        header = f"{'Baseline':<{col_w}} {'Precision':>10} {'Recall':>8} {'F1':>8} {'TP':>7} {'FP':>7} {'FN':>7} {'TN':>7}"
         print(f"\nOverall Metrics ({args.fold} fold):")
-        print(f"  Precision: {metrics['precision']:.4f}")
-        print(f"  Recall:    {metrics['recall']:.4f}")
-        print(f"  F1 Score:  {metrics['f1']:.4f}")
-        print(f"  Accuracy:  {metrics['accuracy']:.4f}")
-        print(f"\nConfusion Matrix:")
-        print(f"  TP: {metrics['tp']:6d}  FP: {metrics['fp']:6d}")
-        print(f"  FN: {metrics['fn']:6d}  TN: {metrics['tn']:6d}")
-        print(f"  Total: {metrics['total']}")
+        print(header)
+        print("-" * len(header))
+
+        all_metrics = {}
+        for name, preds in baselines:
+            m = compute_metrics(ground_truth, preds)
+            all_metrics[name] = m
+            print(f"{name:<{col_w}} {m['precision']:>10.4f} {m['recall']:>8.4f} {m['f1']:>8.4f}"
+                  f" {m['tp']:>7d} {m['fp']:>7d} {m['fn']:>7d} {m['tn']:>7d}")
+
+        # Keep backward-compatible alias
+        metrics = all_metrics["PFAScreen (full)"]
 
         # Save metrics
         metrics_file = os.path.join(args.output, 'validation_metrics.txt')
@@ -309,13 +340,11 @@ def main():
             f.write("="*60 + "\n\n")
             f.write(f"Fold: {args.fold}\n")
             f.write(f"Total samples: {metrics['total']}\n\n")
-            f.write(f"Precision: {metrics['precision']:.4f}\n")
-            f.write(f"Recall:    {metrics['recall']:.4f}\n")
-            f.write(f"F1 Score:  {metrics['f1']:.4f}\n")
-            f.write(f"Accuracy:  {metrics['accuracy']:.4f}\n\n")
-            f.write("Confusion Matrix:\n")
-            f.write(f"  TP: {metrics['tp']:6d}  FP: {metrics['fp']:6d}\n")
-            f.write(f"  FN: {metrics['fn']:6d}  TN: {metrics['tn']:6d}\n")
+            f.write(f"{'Baseline':<{col_w}} {'Precision':>10} {'Recall':>8} {'F1':>8} {'TP':>7} {'FP':>7} {'FN':>7} {'TN':>7}\n")
+            f.write("-" * (col_w + 58) + "\n")
+            for name, m in all_metrics.items():
+                f.write(f"{name:<{col_w}} {m['precision']:>10.4f} {m['recall']:>8.4f} {m['f1']:>8.4f}"
+                        f" {m['tp']:>7d} {m['fp']:>7d} {m['fn']:>7d} {m['tn']:>7d}\n")
 
         print(f"\nResults saved to: {args.output}/")
         print(f"  - Results_{args.output}.xlsx (detailed feature table)")

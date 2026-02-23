@@ -35,7 +35,7 @@ def KMD_analysis(
 
     # Calculation of Kendrick masses and features that are in the same homologous series
     KM = mz_vec*round(rep_unit)/rep_unit
-    KM_round = np.round_(KM)
+    KM_round = np.round(KM)
     KMD = KM - KM_round
     Mod_HS = {'mz':mz_vec,'rt':RT_vec,'mod':modulo,'KMD':KMD}
     Mod_HS_Dataframe = pd.DataFrame(data=Mod_HS)

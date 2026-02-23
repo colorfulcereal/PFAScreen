@@ -1,0 +1,11 @@
+PFAS Detection Validation Results
+============================================================
+
+Fold: val
+Total samples: 143488
+
+Baseline                        Precision   Recall       F1      TP      FP      FN      TN
+----------------------------------------------------------------------------------------
+PFAScreen (full)                   0.0070   1.0000   0.0138    1000  142488       0       0
+Fragment differences only          1.0000   0.1770   0.3008     177       0     823  142488
+Diagnostic fragments only          1.0000   0.5460   0.7063     546       0     454  142488

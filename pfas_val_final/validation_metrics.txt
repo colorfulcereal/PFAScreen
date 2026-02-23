@@ -1,0 +1,13 @@
+PFAS Detection Validation Results
+============================================================
+
+Fold: val
+Total samples: 143488
+
+Baseline                          Precision   Recall       F1      TP      FP      FN      TN
+------------------------------------------------------------------------------------------
+PFAScreen (full)                     0.8770   0.2210   0.3530     221      31     779  142457
+KMD analysis + filter                0.0000   0.0000   0.0000       0       0    1000  142488
+Fragment differences + filter        1.0000   0.0700   0.1308      70       0     930  142488
+Diagnostic fragments + filter        1.0000   0.1840   0.3108     184       0     816  142488
+Suspect screening + filter           0.8708   0.2090   0.3371     209      31     791  142457

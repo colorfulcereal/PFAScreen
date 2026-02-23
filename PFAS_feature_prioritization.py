@@ -22,6 +22,7 @@ def PFAS_feature_prioritization(
         n_homologues = 3,
         adducts = 1,
         tol_suspect = 0.002,
+        skip_suspect = False,
         save_MSMS_spectra = False,
         mC_range = [0, float('inf')],
         MDC_range = [-0.5, 0.5],
@@ -49,7 +50,7 @@ def PFAS_feature_prioritization(
     # write zeros at columns where MSMS spectra are present but not diffs or dias were found
     idx_MSMS_all = np.unique(idx_in_features) # indices with MSMS
     idx_no_hit = Df_FeatureData.index[Df_FeatureData['n_diffs'].isnull()].to_numpy()
-    idx_no_MSMS_hit = idx_no_hit[np.in1d(idx_no_hit, idx_MSMS_all)]
+    idx_no_MSMS_hit = idx_no_hit[np.isin(idx_no_hit, idx_MSMS_all)]
     Df_FeatureData.loc[idx_no_MSMS_hit, 'n_diffs'] = 0
     Df_FeatureData.loc[idx_no_MSMS_hit, 'n_dias'] = 0
 
@@ -60,7 +61,7 @@ def PFAS_feature_prioritization(
         # estimate number of carbons per molecule
         C = intens_C13/intens_C12/0.011145
         # calculate mass defect
-        MD = mz - np.round_(mz, decimals = 0)
+        MD = mz - np.round(mz, decimals = 0)
         # calculate m/C and MD/C
         MDC = MD/C
         mC = mz/C
@@ -119,14 +120,20 @@ def PFAS_feature_prioritization(
     # Suspect screening
     # ==================================================================================
 
-    Df_suspect_screening = suspect_screening(
-                                tol_suspect,
-                                adducts,
-                                Df_FeatureData['mz'],
-                                Df_FeatureData
-                                )
+    if skip_suspect:
+        Df_suspect_screening = pd.DataFrame(
+            {'compound_names': '', 'formulas': '', 'SMILES': '', 'isotope_scores': np.nan},
+            index=Df_FeatureData.index
+        )
+    else:
+        Df_suspect_screening = suspect_screening(
+                                    tol_suspect,
+                                    adducts,
+                                    Df_FeatureData['mz'],
+                                    Df_FeatureData
+                                    )
+        Df_suspect_screening.set_index(Df_FeatureData.index, inplace = True) # NOTE: check if this always works!
 
-    Df_suspect_screening.set_index(Df_FeatureData.index, inplace = True) # NOTE: check if this always works!
     Df_FeatureData = pd.concat([Df_FeatureData, Df_suspect_screening], axis = 1)
 
     # =======================================================================================
